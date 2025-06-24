@@ -71,7 +71,7 @@ class OkxDataProvider:
                 "confirm",
             ],
         )
-        df["open_time"] = pd.to_datetime(df["open_time"], unit="ms")
+        df["open_time"] = pd.to_datetime(pd.to_numeric(df["open_time"]), unit="ms")
         df["close_time"] = df["open_time"] + pd.to_timedelta(self._timeframe_ms(timeframe), unit="ms")
         df["count"] = 0
         df["taker_buy_volume"] = 0
@@ -118,6 +118,7 @@ class OkxDataProvider:
         use_cache: bool = True,
     ) -> pd.DataFrame:
         formatted_symbol = symbol.replace("/", "-")
+        print(f"formatted_symbol: {formatted_symbol}")
         if start_date is None:
             start_date = datetime.now() - timedelta(days=30)
         if end_date is None:
@@ -130,13 +131,17 @@ class OkxDataProvider:
         before = int(end_date.timestamp() * 1000)
         all_rows = []
         while True:
+            print(f"get_history_candles instId: {formatted_symbol}, bar: {bar}, after: {start_ms}, before: {before}, limit: 100")
             res = self.client.get_history_candles(
                 instId=formatted_symbol,
                 bar=bar,
-                after=str(start_ms),
+                # after=str(start_ms),
                 before=str(before),
                 limit="100",
             )
+
+            print(f"res: {res}")
+
             if res.get("code") != "0":
                 break
             data = res.get("data", [])
